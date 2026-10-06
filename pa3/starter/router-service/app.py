@@ -45,56 +45,59 @@ def get_rabbitmq_connection():
 ROUTES = {
     'physical': 'orders.physical',
     'digital': 'orders.digital',
-    # TODO: this assignment adds a third item type. What routing key should
-    # 'subscription' items go to? Keep the naming convention consistent with
-    # the other two.
+    'subscription': 'orders.subscription',
 }
 
 
 def route_order(ch, method, properties, body):
-    """
-    Process an incoming order:
-    1. Parse the order message.
-    2. SPLITTER: break the order into one message per item (see the
-       required shape in the module docstring above).
-    3. CONTENT-BASED ROUTER: publish each item message to the queue that
-       matches its type, using ROUTES above.
-    4. Ack the original orders.incoming message once every item has been
-       published -- not before, and not per-item.
-    """
-    order = json.loads(body)
-    order_id = order['orderId']
-    correlation_id = order['correlationId']
-
-    print(f"[Router] Processing order {order_id}")
+    """Split, route persistently, then acknowledge the original order."""
+    try:
+        order = json.loads(body)
+        order_id = order['orderId']
+        items = order['items']
+        if not isinstance(order_id, str) or not order_id or not isinstance(items, list):
+            raise ValueError('invalid orderId or items')
+        if any(not isinstance(item, dict) for item in items):
+            raise ValueError('items must be objects')
+    except (ValueError, KeyError, TypeError) as error:
+        print(f'[Router] Discarding malformed order: {error}', flush=True)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+        return
 
     connection = get_rabbitmq_connection()
-    channel = connection.channel()
-
-    # TODO: declare the output queues you publish to (idempotent -- safe to
-    # call every time). You need at least orders.physical, orders.digital,
-    # orders.subscription. (orders.results is declared by the workers that
-    # publish to it; you do not need it here.)
-
-    items = order.get('items', [])
-    item_count = len(items)
-
-    # TODO — SPLITTER + CONTENT-BASED ROUTER:
-    # For each item in `items` (keep track of its index):
-    #   1. Build the item message dict per the required shape above.
-    #   2. Look up the routing key for item['type'] in ROUTES.
-    #   3. Decide what happens for a type that is not in ROUTES -- do not
-    #      let it silently vanish. Log it and pick a defensible fallback;
-    #      say what you did and why in your ADR.
-    #   4. channel.basic_publish(..., properties=pika.BasicProperties(delivery_mode=2))
-    #      so the message survives a broker restart.
-
-    connection.close()
-
-    # Acknowledge the original message once every item has been routed.
+    try:
+        channel = connection.channel()
+        for queue in (*ROUTES.values(), 'orders.unroutable', 'orders.complete'):
+            channel.queue_declare(queue=queue, durable=True)
+        channel.confirm_delivery()
+        for index, item in enumerate(items):
+            message = {
+                'orderId': order_id,
+                'correlationId': order_id,
+                'itemIndex': index,
+                'totalItems': len(items),
+                'item': item,
+            }
+            route = ROUTES.get(item.get('type'), 'orders.unroutable')
+            if route == 'orders.unroutable':
+                print(f'[Router] Unsupported type at {order_id}/{index}; quarantined', flush=True)
+            channel.basic_publish(
+                exchange='', routing_key=route, body=json.dumps(message),
+                properties=pika.BasicProperties(delivery_mode=2), mandatory=True,
+            )
+        if not items:
+            channel.basic_publish(
+                exchange='', routing_key='orders.complete',
+                body=json.dumps({
+                    'orderId': order_id, 'correlationId': order_id,
+                    'status': 'complete', 'totalItems': 0, 'receivedItems': 0,
+                    'itemResults': [], 'missingItemIndexes': [],
+                }), properties=pika.BasicProperties(delivery_mode=2), mandatory=True,
+            )
+    finally:
+        connection.close()
     ch.basic_ack(delivery_tag=method.delivery_tag)
-
-    print(f"[Router] Order {order_id} split into {item_count} items and routed")
+    print(f'[Router] Routed {len(items)} items for {order_id}', flush=True)
 
 
 def main():
