@@ -214,39 +214,27 @@ export interface ParsedB2BOrder {
 // Given: fast-xml-parser's own configuration. Getting a third-party parsing
 // library's options right is not this week's lesson; reading the object it
 // hands back and mapping it onto the canonical schema is.
-const xmlParser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_" });
+const xmlParser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_", parseTagValue: false });
 
 // ------------------------------------------------------------------ helpers --
 // Suggested decomposition. Only the three translateX functions and the types
 // above are contractual. Restructure the rest if you would rather, and say
 // why in your ADR.
 
-/**
- * Normalize a source-specific product id to the pricing API's own format,
- * "PROD-XXX", before you call it.
- *
- * TODO:
- *   web:    already "PROD-XXX"      -> unchanged
- *   mobile: numeric only, e.g "001" -> prepend "PROD-"    -> "PROD-001"
- *   b2b:    "SKU-PROD-XXX"          -> strip the "SKU-" prefix -> "PROD-XXX"
- */
+
 export function normalizeProductId(source: "web" | "mobile" | "b2b", rawId: string): string {
-  throw new Error("TODO: normalizeProductId is not implemented");
+  const id = rawId.trim();
+  if (source === "mobile") return `PROD-${id}`;
+  if (source === "b2b") return id.replace(/^SKU-/, "");
+  return id;
 }
 
-/**
- * A pricing API response's price, as a decimal STRING with exactly two
- * fraction digits: 24.99 -> "24.99", 4.5 -> "4.50", 22 -> "22.00".
- *
- * TODO: This is the other half of judgment call #1. `String(4.5)` gives you
- * "4.5", not "4.50" — a later assignment plants exactly that bug ("flip a
- * decimal string to a float") and expects you to recognize it. Do not round
- * through a float representation more than once; the pricing API already
- * gave you a number, so this function's only job is formatting it, not
- * doing arithmetic on it.
- */
+
 export function toDecimalAmount(price: number): string {
-  throw new Error("TODO: toDecimalAmount is not implemented");
+  if (!Number.isFinite(price)) throw new Error("Pricing returned a non-finite amount");
+  const amount = price.toFixed(2);
+  if (!/^-?[0-9]+\.[0-9]{2}$/.test(amount)) throw new Error("Price exceeds decimal format");
+  return amount;
 }
 
 export type EnrichResult =
@@ -254,188 +242,180 @@ export type EnrichResult =
   | { status: "unknown_product" }
   | { status: "error"; httpStatus: number };
 
-/**
- * Call GET {pricingBaseUrl}/pricing/{productId} with the X-API-Key header
- * and turn its response into an EnrichResult.
- *
- * TODO:
- *   - 200: read unitPrice/currency/taxRate/productName from the body. Format
- *     unitPrice with toDecimalAmount() — do not pass the API's number straight
- *     through, and do not round-trip it through parseFloat/toString yourself.
- *   - 404: return { status: "unknown_product" }. Do not throw, and do not
- *     invent a price.
- *   - any other non-2xx (401, 500, a network failure): return
- *     { status: "error", httpStatus }. Never fall back to a price of 0 — a
- *     hidden test sends this a 500 specifically to check you did not.
- */
+
 export async function enrichFromPricing(
   productId: string,
   options: TranslateOptions,
 ): Promise<EnrichResult> {
-  throw new Error("TODO: enrichFromPricing is not implemented");
+  let httpStatus = 0;
+  try {
+    const response = await fetch(
+      `${options.pricingBaseUrl.replace(/\/$/, "")}/pricing/${encodeURIComponent(productId)}`,
+      { headers: { "X-API-Key": options.apiKey ?? DEFAULT_PRICING_API_KEY },
+        signal: AbortSignal.timeout(5000) },
+    );
+    httpStatus = response.status;
+    if (httpStatus === 404) return { status: "unknown_product" };
+    if (!response.ok) return { status: "error", httpStatus };
+    const data = await response.json() as Record<string, unknown>;
+    if (typeof data.unitPrice !== "number" || typeof data.currency !== "string" ||
+        !data.currency || typeof data.productName !== "string" || !data.productName ||
+        typeof data.taxRate !== "number" || !Number.isFinite(data.taxRate) ||
+        data.taxRate < 0 || data.taxRate > 1) {
+      return { status: "error", httpStatus };
+    }
+    return { status: "ok", unitPrice: toDecimalAmount(data.unitPrice),
+      currency: data.currency, taxRate: data.taxRate, productName: data.productName };
+  } catch {
+    // 0 denotes a transport/timeout failure; 200 can denote a malformed body.
+    return { status: "error", httpStatus };
+  }
 }
 
-/**
- * Enrich a list of (already normalized) product ids/quantities/names against
- * the pricing API, splitting the results into priced items and warnings.
- *
- * TODO: For each input line, call enrichFromPricing(). On "ok", produce a
- * CanonicalItem (quantity and productName come from the SOURCE line, not
- * from the pricing API's productName, unless you decide otherwise — say so
- * in your ADR if you do). On "unknown_product" or "error", push a
- * TransformWarning instead of an item, and do not let one bad line item stop
- * the others from being priced (same lesson as PA1: one bad record does not
- * take down the whole batch).
- */
+
 export async function enrichItems(
   lines: Array<{ productId: string; productName: string; quantity: number }>,
   options: TranslateOptions,
 ): Promise<{ items: CanonicalItem[]; warnings: TransformWarning[] }> {
-  throw new Error("TODO: enrichItems is not implemented");
+  const outcomes = await Promise.all(lines.map(async (line) => ({
+    line, pricing: await enrichFromPricing(line.productId, options),
+  })));
+  const items: CanonicalItem[] = [];
+  const warnings: TransformWarning[] = [];
+  for (const { line, pricing } of outcomes) {
+    if (pricing.status === "ok") {
+      items.push({ productId: line.productId, productName: line.productName,
+        quantity: line.quantity, unitPrice: pricing.unitPrice,
+        currency: pricing.currency, taxRate: pricing.taxRate });
+    } else {
+      warnings.push({ productId: line.productId,
+        code: pricing.status === "unknown_product" ? "UNKNOWN_PRODUCT" : "PRICING_API_ERROR",
+        message: pricing.status === "unknown_product" ? "Product not found in pricing catalog"
+          : `Pricing request failed (HTTP ${pricing.httpStatus}; 0 means transport failure)`,
+      });
+    }
+  }
+  return { items, warnings };
 }
 
-/**
- * "2026-09-01T10:30:00Z" style epoch (seconds, UTC) -> ISO-8601.
- *
- * TODO: `new Date(seconds * 1000).toISOString()` is the whole function. The
- * TODO is remembering the *1000 — this is seconds, not milliseconds.
- */
+
 export function epochSecondsToIso(epochSeconds: number): string {
-  throw new Error("TODO: epochSecondsToIso is not implemented");
+  return new Date(epochSeconds * 1000).toISOString();
 }
 
-/**
- * ISO 4217 numeric currency code -> alpha code. This course's fixtures only
- * need: 978 -> EUR, 840 -> USD, 826 -> GBP.
- *
- * TODO: handle at least those three. Decide what to do with a code you do
- * not recognize (throw, or pass the number through as a string) and say why
- * in your ADR — this is a real tolerant-reader judgment call, not a trick.
- */
+
 export function mapCurrencyCode(numericCode: number): string {
-  throw new Error("TODO: mapCurrencyCode is not implemented");
+  const currencies: Record<number, string> = { 978: "EUR", 840: "USD", 826: "GBP" };
+  return currencies[numericCode] ?? String(numericCode);
 }
 
-/**
- * Mobile's integer status enum -> canonical status string.
- * 1=new, 2=processing, 3=shipped, 4=delivered.
- *
- * TODO: implement the mapping above.
- */
+
 export function mapMobileStatus(code: number): OrderStatus {
-  throw new Error("TODO: mapMobileStatus is not implemented");
+  const statuses: Record<number, OrderStatus> = { 1: "new", 2: "processing", 3: "shipped", 4: "delivered" };
+  const status = statuses[code];
+  if (!status) throw new Error("Unsupported mobile status");
+  return status;
 }
 
-/**
- * B2B's uppercase status string -> canonical status string. "NEW" -> "new".
- *
- * TODO: lowercase it. Decide what happens to a value you do not recognize.
- */
+
 export function mapB2BStatus(raw: string): OrderStatus {
-  throw new Error("TODO: mapB2BStatus is not implemented");
+  const status = raw.trim().toLowerCase();
+  if (status !== "new" && status !== "processing" && status !== "shipped" && status !== "delivered") {
+    throw new Error("Unsupported order status");
+  }
+  return status;
 }
 
-/**
- * "Brīvības iela 100, Rīga, LV-1001, LV" -> { street, city, postalCode, country }
- *
- * TODO: split on ", " (comma-space) into exactly four parts, in that order.
- * This is string work, not a library.
- */
+
 export function parseMobileAddress(addr: string): Address {
-  throw new Error("TODO: parseMobileAddress is not implemented");
+  const parts = addr.split(",").map(part => part.trim());
+  if (parts.length !== 4 || parts.some(part => !part)) throw new Error("Expected four address components");
+  const [street, city, postalCode, country] = parts as [string, string, string, string];
+  return { street, city, postalCode, country };
 }
 
-/**
- * Decode the B2B XML file's raw bytes into text.
- *
- * TODO: The file declares `encoding="windows-1257"` in its XML prolog, and
- * it means it — reading these bytes as UTF-8 will silently corrupt every
- * Latvian diacritic in it (you will get "?" characters, not an error).
- * `TextDecoder` knows the label "windows-1257". This is the same lesson as
- * PA1's order file, applied to XML instead of a fixed-width record.
- */
+
 export function decodeB2BXmlBytes(bytes: Buffer): string {
-  throw new Error("TODO: decodeB2BXmlBytes is not implemented");
+  return new TextDecoder("windows-1257", { fatal: true }).decode(bytes);
+}
+
+function canonicalOrderType(raw: string): CanonicalOrder["orderType"] {
+  if (raw === "standard" || raw === "express" || raw === "b2b") return raw;
+  throw new Error("Unsupported order type");
 }
 
 // -------------------------------------------------------------- translators --
 // The three functions the grader calls directly. Each reads its own fixture
 // path, translates + enriches + filters, and returns a TransformResult.
 
-/**
- * TODO:
- *   - Read and JSON.parse webOrderPath as a WebOrderInput.
- *   - Map customer/address across unchanged (this source is already closest
- *     to canonical) — EXCEPT customer.payment, which must not appear
- *     anywhere in the object you return.
- *   - Normalize each item's productId (identity for web) and enrich via
- *     enrichItems().
- *   - orderType is already "standard"/"express"/"b2b" for this source; source
- *     is "web"; status and currency pass through unchanged (already
- *     canonical shape for this source).
- *   - orderDate: re-parse and re-serialize it (`new Date(x).toISOString()`),
- *     do not pass the source's string straight through. It already LOOKS
- *     like ISO-8601, but "looks like" is not "is": your B2B/mobile sources
- *     also produce ISO-8601 for the same instant, from a different
- *     representation, and toISOString() is what guarantees all three come
- *     out byte-for-byte identical (milliseconds included) rather than
- *     merely numerically equal.
- *   - Set receivedAt from options.now?.() ?? new Date().
- */
+
 export async function translateWeb(
   webOrderPath: string,
   options: TranslateOptions,
 ): Promise<TransformResult> {
-  throw new Error("TODO: translateWeb is not implemented");
+  const input = JSON.parse(readFileSync(webOrderPath, "utf8")) as WebOrderInput;
+  const { items, warnings } = await enrichItems(input.items.map(line => ({
+    productId: normalizeProductId("web", line.productId),
+    productName: line.productName, quantity: line.quantity,
+  })), options);
+  if (!items.length) return { order: null, warnings };
+  const address = input.customer.address;
+  return { warnings, order: {
+    orderId: input.orderId, orderType: canonicalOrderType(input.orderType), source: "web",
+    receivedAt: (options.now?.() ?? new Date()).toISOString(),
+    orderDate: new Date(input.orderDate).toISOString(),
+    customer: { name: input.customer.name, email: input.customer.email,
+      address: { street: address.street, city: address.city, postalCode: address.postalCode, country: address.country } },
+    items, currency: input.currency, status: mapB2BStatus(input.status),
+  } };
 }
 
-/**
- * TODO:
- *   - Read and JSON.parse mobileOrderPath as a MobileOrderInput.
- *   - cust_name/cust_email -> customer.name/email. addr -> parseMobileAddress().
- *   - ts -> orderDate via epochSecondsToIso(). st -> status via mapMobileStatus().
- *   - cur -> currency via mapCurrencyCode().
- *   - Each item: pid -> normalizeProductId("mobile", pid), pname -> productName,
- *     qty -> quantity. Enrich via enrichItems().
- *   - ot -> orderType ("express" in the given fixture). source is "mobile".
- *   - pm/pan/pexp must not appear anywhere in the object you return.
- */
+
 export async function translateMobile(
   mobileOrderPath: string,
   options: TranslateOptions,
 ): Promise<TransformResult> {
-  throw new Error("TODO: translateMobile is not implemented");
+  const input = JSON.parse(readFileSync(mobileOrderPath, "utf8")) as MobileOrderInput;
+  const { items, warnings } = await enrichItems(input.items.map(line => ({
+    productId: normalizeProductId("mobile", line.pid),
+    productName: line.pname, quantity: line.qty,
+  })), options);
+  if (!items.length) return { order: null, warnings };
+  return { warnings, order: {
+    orderId: input.oid, orderType: canonicalOrderType(input.ot), source: "mobile",
+    receivedAt: (options.now?.() ?? new Date()).toISOString(),
+    orderDate: epochSecondsToIso(input.ts),
+    customer: { name: input.cust_name, email: input.cust_email, address: parseMobileAddress(input.addr) },
+    items, currency: mapCurrencyCode(input.cur), status: mapMobileStatus(input.st),
+  } };
 }
 
-/**
- * TODO:
- *   - Read b2bOrderPath as BYTES (not as a string — decodeB2BXmlBytes needs
- *     the raw bytes to decode correctly).
- *   - Decode with decodeB2BXmlBytes(), then xmlParser.parse() the result.
- *   - Map BuyerParty.Name/ContactEmail/ShipToAddress -> customer.
- *     PaymentDetails (wherever it lives) must not appear anywhere in the
- *     object you return.
- *   - Normalize LineItems.LineItem to an array (see ParsedB2BOrder's note),
- *     then for each: "@_sku" -> normalizeProductId("b2b", sku),
- *     Description -> productName, "@_quantity" -> quantity (this arrives as
- *     a string attribute — parse it to a number). Ignore any UnitListPrice
- *     element if you find one: it is a legacy list price, not a live price,
- *     and a public test changes the REAL price in the mock catalog
- *     specifically to check you did not use it.
- *   - Status -> status via mapB2BStatus(). "@_orderType" -> orderType ("b2b").
- *     source is "b2b". "@_orderId" -> orderId. "@_orderDate" -> orderDate,
- *     but re-parse and re-serialize it (`new Date(x).toISOString()`) — same
- *     reason as translateWeb: it must come out identical to the other two
- *     sources' orderDate, not merely the same instant.
- *   - Ignore any element you do not recognize (ContractDate, Notes, or
- *     anything a hidden test adds that is not documented here) rather than
- *     throwing on it.
- */
+
 export async function translateB2B(
   b2bOrderPath: string,
   options: TranslateOptions,
 ): Promise<TransformResult> {
-  throw new Error("TODO: translateB2B is not implemented");
+  const parsed = xmlParser.parse(decodeB2BXmlBytes(readFileSync(b2bOrderPath))) as ParsedB2BOrder;
+  const input = parsed.PurchaseOrder;
+  const raw = input.LineItems.LineItem;
+  const lines = (raw == null ? [] : Array.isArray(raw) ? raw : [raw]) as Array<{
+    "@_sku": string; "@_quantity": string; Description: string;
+  }>;
+  const { items, warnings } = await enrichItems(lines.map(line => ({
+    productId: normalizeProductId("b2b", line["@_sku"]),
+    productName: line.Description, quantity: Number(line["@_quantity"]),
+  })), options);
+  if (!items.length) return { order: null, warnings };
+  const buyer = input.BuyerParty;
+  const address = buyer.ShipToAddress;
+  return { warnings, order: {
+    orderId: input["@_orderId"], orderType: canonicalOrderType(input["@_orderType"]), source: "b2b",
+    receivedAt: (options.now?.() ?? new Date()).toISOString(),
+    orderDate: new Date(input["@_orderDate"]).toISOString(),
+    customer: { name: buyer.Name, email: buyer.ContactEmail,
+      address: { street: address.Street, city: address.City, postalCode: address.PostalCode, country: address["@_country"] } },
+    items, currency: input.LineItems["@_currency"], status: mapB2BStatus(input.Status),
+  } };
 }
 
 // -------------------------------------------------------------------- main --
