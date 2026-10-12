@@ -1,6 +1,6 @@
 import express from "express";
 import { randomUUID } from "node:crypto";
-import { connectWithRetry } from "../../shared/rabbit";
+import { connectWithRetry, withoutRetryHistory } from "../../shared/rabbit";
 import type { CanonicalOrder } from "../../shared/canonical-order";
 
 const orders = new Map<string, CanonicalOrder>();
@@ -41,6 +41,9 @@ async function main(): Promise<void> {
   const { connection, channel: initialChannel } = await connectWithRetry(process.env.RABBITMQ_URL!);
   const channel = await connection.createConfirmChannel();
   await initialChannel.close();
+  await channel.assertExchange("orders.dlq.exchange", "fanout", { durable: true });
+  await channel.assertQueue("orders.dlq", { durable: true });
+  await channel.bindQueue("orders.dlq", "orders.dlq.exchange", "");
   const app = express();
   app.use(express.json());
   app.get("/health", (_req, res) => res.json({ status: "ok" }));
@@ -64,6 +67,43 @@ async function main(): Promise<void> {
       res.status(201).json({ correlationId, status: "accepted" });
     } catch {
       res.status(503).json({ error: "Broker publication failed" });
+    }
+  });
+  let replaying = false;
+  app.post("/dlq/replay", async (_req, res) => {
+    if (replaying) { res.status(409).json({ error: "Replay already in progress" }); return; }
+    replaying = true;
+    let replayed = 0;
+    let replayChannel: Awaited<ReturnType<typeof connection.createConfirmChannel>> | undefined;
+    try {
+      replayChannel = await connection.createConfirmChannel();
+      // Drain the current batch only, so a still-failing consumer cannot
+      // turn one HTTP request into an unbounded replay loop.
+      const { messageCount } = await replayChannel.checkQueue("orders.dlq");
+      for (let index = 0; index < messageCount; index++) {
+        const msg = await replayChannel.get("orders.dlq", { noAck: false });
+        if (!msg) break;
+        const origin = msg.properties.headers?.originQueue;
+        if (!["payments.queue", "inventory.queue", "notifications.queue"].includes(origin)) {
+          replayChannel.nack(msg, false, true);
+          throw new Error("Unknown DLQ origin queue");
+        }
+        const currentChannel = replayChannel;
+        await new Promise<void>((resolve, reject) => {
+          currentChannel.publish("orders.return.exchange", origin, msg.content, {
+            headers: withoutRetryHistory(msg.properties.headers),
+            contentType: msg.properties.contentType, persistent: true,
+          }, error => error ? reject(error) : resolve());
+        });
+        replayChannel.ack(msg);
+        replayed++;
+      }
+      res.json({ replayed });
+    } catch {
+      res.status(503).json({ error: "Replay failed", replayed });
+    } finally {
+      if (replayChannel) await replayChannel.close().catch(() => {});
+      replaying = false;
     }
   });
   app.listen(PORT, () => console.log(`[Order] Listening on ${PORT}`));

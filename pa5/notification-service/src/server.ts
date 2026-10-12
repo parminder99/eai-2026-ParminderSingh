@@ -9,6 +9,8 @@ const MAX_RETRIES = Number(process.env.MAX_RETRIES) || 3;
 const IDS_FILE = "/data/processed-ids.json";
 const LOG_FILE = "/data/notification.log";
 
+class InvalidMessage extends Error {}
+
 async function main(): Promise<void> {
   mkdirSync("/data", { recursive: true });
   const saved: unknown = existsSync(IDS_FILE) ? JSON.parse(readFileSync(IDS_FILE, "utf8")) : [];
@@ -29,20 +31,28 @@ async function main(): Promise<void> {
   persist();
   const { channel } = await connectWithRetry(process.env.RABBITMQ_URL!);
   await channel.prefetch(1);
+  await channel.assertExchange("orders.dlq.exchange", "fanout", { durable: true });
+  await channel.assertQueue("orders.dlq", { durable: true });
+  await channel.bindQueue("orders.dlq", "orders.dlq.exchange", "");
+  await channel.assertExchange("orders.invalid.exchange", "fanout", { durable: true });
+  await channel.assertQueue("orders.invalid", { durable: true });
+  await channel.bindQueue("orders.invalid", "orders.invalid.exchange", "");
+
   await channel.consume(QUEUE, async (msg: ConsumeMessage | null) => {
     if (!msg) return;
     const correlationId = msg.properties.headers?.["correlationId"] as string | undefined;
     const retryCount = getRetryCount(msg);
     try {
-      if (!correlationId) throw new Error("Missing correlation identifier");
+      const order = JSON.parse(msg.content.toString()) as CanonicalOrder;
+      if (!correlationId || !order || typeof order.orderId !== "string" || !order.customer?.email) {
+        throw new InvalidMessage("Invalid notification order or correlation identifier");
+      }
       if (processed.has(correlationId)) {
         persist();
         channel.ack(msg);
         console.log(`[Notification] ${correlationId}: duplicate skipped`);
         return;
       }
-      const order = JSON.parse(msg.content.toString()) as CanonicalOrder;
-      if (!order.orderId || !order.customer?.email) throw new Error("Invalid notification order");
       const timestamp = new Date().toISOString();
       appendFileSync(LOG_FILE, JSON.stringify({ correlationId, orderId: order.orderId,
         customerEmail: order.customer.email, timestamp, message: "Order received" }) + "\n");
@@ -55,11 +65,20 @@ async function main(): Promise<void> {
       channel.ack(msg);
       console.log(`[Notification] ${correlationId}: logged ${order.orderId}`);
     } catch (err) {
-      // Retry / DLQ logic (provided as reference â€” study this for the other
+      if (err instanceof SyntaxError || err instanceof InvalidMessage) {
+        channel.publish("orders.invalid.exchange", "", msg.content, {
+          headers: msg.properties.headers, contentType: msg.properties.contentType, persistent: true,
+        });
+        channel.ack(msg);
+        console.log(`[Notification] ${correlationId}: invalid message`);
+        return;
+      }
+
+      // Retry / DLQ logic (provided as reference — study this for the other
       // two services). Do not modify.
       if (retryCount >= MAX_RETRIES - 1) {
         channel.publish(process.env.DLQ_EXCHANGE!, "", msg.content, {
-          headers: msg.properties.headers,
+          headers: { ...msg.properties.headers, originQueue: QUEUE }, persistent: true,
         });
         channel.ack(msg);
         console.log(`[Notification] -> DLQ after ${retryCount + 1} attempts: ${(err as Error).message}`);
