@@ -73,18 +73,22 @@ export async function connectWithRetry(
 
 /**
  * Parses the `x-death` header array RabbitMQ attaches once a message has
- * been dead-lettered at least once, and sums the retry counts across every
- * exchange/queue path it travelled through. Returns 0 for a message that
+ * been dead-lettered at least once, and counts rejected deliveries, excluding
+ * TTL expiry entries which are the other half of the same retry cycle. Returns 0 for a message that
  * has never been retried.
  */
 export function getRetryCount(msg: ConsumeMessage): number {
   const xDeath = msg.properties.headers?.["x-death"] as
-    | Array<{ count?: number }>
+    | Array<{ count?: number; reason?: string }>
     | undefined;
 
   if (!Array.isArray(xDeath)) {
     return 0;
   }
 
-  return xDeath.reduce((sum, entry) => sum + (Number(entry?.count) || 0), 0);
+  // Every completed retry has two x-death entries: rejection and TTL expiry.
+  // Only rejections represent failed processing attempts; counting both
+  // would reach MAX_RETRIES one attempt too early.
+  return xDeath.reduce((sum, entry) =>
+    sum + (entry.reason === "rejected" ? Number(entry.count) || 0 : 0), 0);
 }

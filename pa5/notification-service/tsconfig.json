@@ -11,12 +11,8 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "verbatimModuleSyntax": true,
-    // See order-service/tsconfig.json for why this mapping exists — it only
-    // affects local `tsc --noEmit`, not the tsx runtime.
     "baseUrl": ".",
-    "paths": {
-      "amqplib": ["./node_modules/@types/amqplib/index.d.ts"]
-    }
+    "paths": {}
   },
   "include": ["src/**/*.ts", "../shared/**/*.ts"]
 }
