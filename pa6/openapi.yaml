@@ -1,206 +1,437 @@
-openapi: 3.0.3
-info:
-  title: PA6 Checkout Orchestration API
-  version: 1.0.0
-  description: >-
-    Worked example contract for the PA6 checkout saga. It documents the shape
-    of POST /checkout and its downstream-orchestration side effects: payment
-    authorization, inventory reservation, shipping creation and notification
-    delivery, executed in strict order with compensation on failure. This
-    file is a worked EXAMPLE for you to study, lint and diff against — it is
-    not the answer key. See README.md "How to use this file" before you copy
-    it verbatim.
-servers:
-  - url: http://localhost:3000
-    description: Local orchestrator, started via docker compose.
-paths:
-  /health:
-    get:
-      operationId: getHealth
-      summary: Liveness probe
-      description: Reports whether the orchestrator process is up and accepting requests.
-      responses:
-        "200":
-          description: The orchestrator is running.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HealthStatus"
-  /checkout:
-    post:
-      operationId: createCheckout
-      summary: Run the checkout saga for one order
-      description: >-
-        Executes payment authorization, inventory reservation, shipping
-        creation and notification delivery in strict sequence for a single
-        order. On a downstream failure or timeout, already-completed steps
-        that have a compensating action (payment, inventory) are rolled back
-        in reverse order before the response is returned.
-      parameters:
-        - name: Idempotency-Key
-          in: header
-          required: true
-          description: >-
-            Client-generated key that scopes retries of this exact checkout
-            request. The same key with the same request body replays the
-            first result; the same key with a different body is rejected.
-          schema:
-            type: string
-            minLength: 1
-      requestBody:
-        required: true
-        description: The order to check out - identifiers, line items, amount and notification recipient.
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CheckoutRequest"
-      responses:
-        "200":
-          description: The saga completed - payment, inventory, shipping and notification all succeeded.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CheckoutResponse"
-        "400":
-          description: The request body or the Idempotency-Key header failed validation.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "409":
-          description: >-
-            The Idempotency-Key is already associated with a different
-            request body, or a request with this key is still in progress.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "422":
-          description: >-
-            A downstream step failed and, if applicable, compensation ran
-            (successfully, yielding a compensated saga, or unsuccessfully,
-            yielding compensation_failed).
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CheckoutResponse"
-        "504":
-          description: A downstream call exceeded the configured request timeout; compensation ran for any completed steps.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CheckoutResponse"
-components:
-  schemas:
-    HealthStatus:
-      type: object
-      description: Minimal liveness payload.
-      required: [status]
-      properties:
-        status:
-          type: string
-          description: Always "ok" when the process can serve requests.
-          enum: [ok]
-    CheckoutItem:
-      type: object
-      description: One line item within an order.
-      required: [sku, quantity, price]
-      properties:
-        sku:
-          type: string
-          description: Stock-keeping unit identifier for the item.
-          minLength: 1
-        quantity:
-          type: integer
-          description: Number of units of this item on the order.
-          minimum: 1
-        price:
-          type: number
-          description: Unit price in the order's currency.
-          minimum: 0
-    CheckoutRequest:
-      type: object
-      description: The order to run through the checkout saga.
-      required: [orderId, items, amount, recipient]
-      properties:
-        orderId:
-          type: string
-          description: Caller-supplied unique identifier for the order.
-          minLength: 1
-        customerId:
-          type: string
-          description: Identifier of the customer placing the order.
-        recipient:
-          type: string
-          description: Email address the completion notification is sent to.
-          format: email
-        items:
-          type: array
-          description: Line items on the order. Bounded to keep a single saga call cheap to retry.
-          maxItems: 50
-          items:
-            $ref: "#/components/schemas/CheckoutItem"
-        amount:
-          type: number
-          description: Total order amount charged to payment.
-          minimum: 0
-    TraceItem:
-      type: object
-      description: One recorded step of the saga's execution, in the order it actually ran.
-      required: [step, status, startedAt, finishedAt, durationMs]
-      properties:
-        step:
-          type: string
-          description: Name of the step, e.g. payment, inventory, shipping, notification, or a compensation step such as payment_refund.
-          minLength: 1
-        status:
-          type: string
-          description: Outcome of this step - success, failed or timeout.
-          minLength: 1
-        startedAt:
-          type: string
-          description: ISO-8601 timestamp when the step began.
-          format: date-time
-        finishedAt:
-          type: string
-          description: ISO-8601 timestamp when the step ended.
-          format: date-time
-        durationMs:
-          type: integer
-          description: Wall-clock duration of the step, in milliseconds.
-          minimum: 0
-    CheckoutResponse:
-      type: object
-      description: Result of running the checkout saga for one order.
-      required: [orderId, status, trace]
-      properties:
-        orderId:
-          type: string
-          description: Echoes the orderId from the request.
-          minLength: 1
-        status:
-          type: string
-          description: Final saga state.
-          enum: [completed, failed, compensated, in_progress]
-        code:
-          type: string
-          description: Machine-readable failure reason, present on any non-completed status.
-        trace:
-          type: array
-          description: Ordered record of every step the saga executed, including compensation steps. Bounded because a saga has a fixed, small number of possible steps.
-          maxItems: 16
-          items:
-            $ref: "#/components/schemas/TraceItem"
-    ErrorResponse:
-      type: object
-      description: Machine-readable error shape returned for validation and idempotency failures.
-      required: [code, message]
-      properties:
-        code:
-          type: string
-          description: Stable machine-readable error code, e.g. validation_error, idempotency_payload_mismatch, idempotency_conflict.
-          minLength: 1
-        message:
-          type: string
-          description: Human-readable explanation, safe to show to a developer caller.
-          minLength: 1
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Parminder Singh checkout saga",
+    "version": "1.0.0",
+    "description": "Synchronous checkout with sequential calls, bounded request size, compensating actions, and restart-persistent idempotency. An interrupted in-progress operation remains conflicted until an operator reconciles it.",
+    "contact": {
+      "name": "Parminder Singh"
+    },
+    "license": {
+      "name": "Course assignment"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local PA6 Compose endpoint"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Checkout",
+      "description": "Checkout execution and health"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Checkout"
+        ],
+        "operationId": "readHealth",
+        "summary": "Read process health",
+        "description": "Reports process liveness; it does not probe downstream providers.",
+        "responses": {
+          "200": {
+            "description": "Process is serving requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/checkout": {
+      "post": {
+        "tags": [
+          "Checkout"
+        ],
+        "operationId": "executeCheckout",
+        "summary": "Execute or replay one checkout",
+        "description": "Authorize payment, reserve stock, create shipping, then notify. A failed step stops forward progress. Completed inventory and payment calls are compensated in reverse order. Same-key requests replay a terminal result, conflict during execution, or reject mismatched payloads. Compensation failure takes precedence over the original timeout or refusal.",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "Client-chosen key, up to 200 characters. Object key order does not change payload identity. An in-progress record survives crashes and is not automatically retried.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Canonical order with at most 100 lines. Payment receives the sum of quantity times decimal unitPrice, without adding tax.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckoutOrder"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "All four steps completed, or a successful stored result was replayed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SagaOutcome"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing key, malformed JSON, invalid canonical body, or item/key bound exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Key is in progress or associated with a different canonical payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "JSON body exceeds the one-megabyte transport limit.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "A service refused or failed, or compensation failed. Failed compensation sets compensation_failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SagaOutcome"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "A forward service call timed out; all applicable compensation calls succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SagaOutcome"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DeliveryAddress": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "street",
+          "city",
+          "postalCode",
+          "country"
+        ],
+        "properties": {
+          "street": {
+            "type": "string",
+            "minLength": 1
+          },
+          "city": {
+            "type": "string",
+            "minLength": 1
+          },
+          "postalCode": {
+            "type": "string",
+            "minLength": 1
+          },
+          "country": {
+            "type": "string",
+            "description": "ISO 3166-1 alpha-2, e.g. \"LV\", \"GB\"."
+          }
+        }
+      },
+      "Buyer": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "email",
+          "address"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "address": {
+            "$ref": "#/components/schemas/DeliveryAddress"
+          }
+        }
+      },
+      "PricedLine": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "productId",
+          "productName",
+          "quantity",
+          "unitPrice",
+          "currency",
+          "taxRate"
+        ],
+        "properties": {
+          "productId": {
+            "type": "string",
+            "pattern": "^PROD-[0-9]+$",
+            "description": "Normalized to the pricing API's own format before enrichment. See each translator for its source-specific normalization rule."
+          },
+          "productName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "unitPrice": {
+            "type": "string",
+            "pattern": "^-?[0-9]+\\.[0-9]{2}$",
+            "description": "A decimal STRING with exactly two fraction digits, e.g. \"24.99\". NEVER a JSON number \u00e2\u20ac\u201d a float silently loses trailing zeros and, eventually, cents. Comes from the pricing API's response, not from the source order (which does not carry a trustworthy price)."
+          },
+          "currency": {
+            "type": "string",
+            "description": "The currency the unitPrice is denominated in, as returned by the pricing API. May differ from the order-level currency below."
+          },
+          "taxRate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Fraction, e.g. 0.21 for 21%. Not a monetary amount, so a number is fine here."
+          }
+        }
+      },
+      "CheckoutOrder": {
+        "description": "The canonical order model. Owned by the course, not by any assignment. From PA4 onward, every assignment reads or writes exactly this shape \u00e2\u20ac\u201d do not add, rename or retype a field, even if your source system makes that convenient. There is deliberately no field for payment/card/IBAN details: a source that carries one gets it stripped during transformation (content filter pattern).",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "orderId",
+          "orderType",
+          "source",
+          "receivedAt",
+          "orderDate",
+          "customer",
+          "items",
+          "currency",
+          "status"
+        ],
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The order id as given by the source system. Not renumbered."
+          },
+          "orderType": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "express",
+              "b2b"
+            ],
+            "description": "The business order type. One-to-one with source in this course's fixtures, but modelled separately because a future source could carry a different orderType than its channel implies."
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "web",
+              "mobile",
+              "b2b"
+            ],
+            "description": "Which translator produced this record. Provenance, not a business field."
+          },
+          "receivedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the canonical translator produced this record (its own clock), not the order's own timestamp. Excluded from cross-source structural comparisons for that reason."
+          },
+          "orderDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The order's own timestamp, normalized to ISO-8601 UTC regardless of the source's original representation (string, or Unix epoch seconds)."
+          },
+          "customer": {
+            "$ref": "#/components/schemas/Buyer"
+          },
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/PricedLine"
+            },
+            "maxItems": 100,
+            "description": "Between one and 100 priced lines; totals are calculated in whole cents."
+          },
+          "currency": {
+            "type": "string",
+            "description": "The order-level currency, as declared by the source (after mapping, e.g. ISO 4217 numeric -> alpha)."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "new",
+              "processing",
+              "shipped",
+              "delivered"
+            ]
+          }
+        }
+      },
+      "StepTrace": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "A completed call, including failed calls and compensation calls.",
+        "required": [
+          "step",
+          "status",
+          "startedAt",
+          "finishedAt",
+          "durationMs"
+        ],
+        "properties": {
+          "step": {
+            "type": "string",
+            "enum": [
+              "payment",
+              "inventory",
+              "shipping",
+              "notification",
+              "inventory_release",
+              "payment_refund"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "success",
+              "failed",
+              "timeout"
+            ]
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "durationMs": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "SagaOutcome": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Terminal checkout result, persisted and replayed without modification.",
+        "required": [
+          "orderId",
+          "status",
+          "trace"
+        ],
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "failed",
+              "compensated"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "description": "Failure code from the service, timeout, or compensation_failed; absent on success."
+          },
+          "trace": {
+            "type": "array",
+            "maxItems": 6,
+            "items": {
+              "$ref": "#/components/schemas/StepTrace"
+            },
+            "description": "Actual call order; at most four forward and two compensation calls."
+          }
+        }
+      },
+      "RequestError": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Validation or idempotency failure; no new downstream calls were started.",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "validation_error",
+              "idempotency_conflict",
+              "idempotency_payload_mismatch"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "Health": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
