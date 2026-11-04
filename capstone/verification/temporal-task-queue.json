@@ -4,22 +4,22 @@
     {
       "buildId": "UNVERSIONED",
       "taskQueueType": "workflow",
-      "identity": "1@fc1bd8b4a180",
-      "lastAccessTime": "2026-11-04T20:13:50.577812048Z",
+      "identity": "1@eadd7be8a856",
+      "lastAccessTime": "2026-11-04T20:18:31.307384308Z",
       "ratePerSecond": 100000
     },
     {
       "buildId": "UNVERSIONED",
       "taskQueueType": "activity",
-      "identity": "1@fc1bd8b4a180",
-      "lastAccessTime": "2026-11-04T20:13:51.11027595Z",
+      "identity": "1@eadd7be8a856",
+      "lastAccessTime": "2026-11-04T20:18:17.441028324Z",
       "ratePerSecond": 100000
     }
   ],
   "stats": [
     {
       "buildId": "UNVERSIONED",
-      "taskQueueType": "workflow",
+      "taskQueueType": "activity",
       "approximateBacklogCount": 0,
       "approximateBacklogAge": "0s",
       "backlogIncreaseRate": 0,
@@ -28,7 +28,7 @@
     },
     {
       "buildId": "UNVERSIONED",
-      "taskQueueType": "activity",
+      "taskQueueType": "workflow",
       "approximateBacklogCount": 0,
       "approximateBacklogAge": "0s",
       "backlogIncreaseRate": 0,

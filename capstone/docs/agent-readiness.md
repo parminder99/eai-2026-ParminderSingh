@@ -1,5 +1,12 @@
 # Operator assistant boundary
 ## Tools
+All tools use one of these closed input schemas. Read and write permissions are distinct even when their input shapes match.
+
+```json
+{"CidInput":{"type":"object","properties":{"correlationId":{"type":"string","format":"uuid"}},"required":["correlationId"],"additionalProperties":false},"EmptyInput":{"type":"object","properties":{},"additionalProperties":false}}
+```
+
+order_status, trace, replay and compensate use CidInput; operations uses EmptyInput.
 Read tools:
 - order_status: JSON schema {type: object, properties: {correlationId: {type: string, format: uuid}}, required: [correlationId], additionalProperties: false}; maps to GET /orders/:cid.
 - trace: same input schema; maps to GET /trace/:cid.

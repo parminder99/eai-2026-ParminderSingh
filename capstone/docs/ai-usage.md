@@ -1,6 +1,6 @@
 # AI assistance disclosure
 ## Tools used
-OpenAI Codex, local PowerShell, Python, Docker Compose, Node.js and the supplied Vitest suite were used. Git records the delivered changes.
+OpenAI Codex, local PowerShell, Python, Docker Compose, Node.js and the supplied Vitest suite were used. Prettier formatted the owned service code. Bpmn-js imported and exported the BPMN model, and librsvg rendered the diagram preview. Git records the delivered changes.
 ## What for
 Codex authored the capstone service implementation, diagrams and explanatory documents and operated local verification. The supplied kit and public tests provided the contract.
 ## What I changed or rejected

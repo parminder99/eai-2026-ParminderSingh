@@ -1,0 +1,50 @@
+
+> eai-2026-capstone-tests@1.0.0 test
+> node stage.mjs
+
+Stages 0–6: 0-stack, 1-intake, 2-saga, 3-compensation, 4-channels, 5-trace-ops, 6-documents
+
+
+ RUN  v2.1.9 /repo/capstone/tests
+
+ ✓ public/0-stack.test.ts > stage 0 · the stack > P0.1 · every one of your services answers GET /health with 200 and the deep-check structure
+ ✓ public/0-stack.test.ts > stage 0 · the stack > P0.2 · docker-compose.yml includes docker-compose.kit.yml and declares the fixed names, host ports, mem_limits and named volumes
+ ✓ public/0-stack.test.ts > stage 0 · the stack > P0.3 · the broker holds the topology of README §3.2, with its types and arguments
+ ✓ public/1-intake.test.ts > stage 1 · intake > P1.1 · web JSON → 202 with a UUID v4 correlationId, and GET /orders/:cid answers 200
+ ✓ public/1-intake.test.ts > stage 1 · intake > P1.2 · mobile JSON → 202
+ ✓ public/1-intake.test.ts > stage 1 · intake > P1.3 · b2b XML in windows-1257 → 202; the event is a valid canonical order with the diacritics intact
+ ✓ public/1-intake.test.ts > stage 1 · intake > P1.4 · the event carries the headers correlationId (the one returned), causationId and businessKey, a messageId, and is persistent
+ ✓ public/1-intake.test.ts > stage 1 · intake > P1.5 · a missing Idempotency-Key → 400; the same key and body → the same correlationId, and exactly one event 1121ms
+ ✓ public/1-intake.test.ts > stage 1 · intake > P1.6 · an unknown product → 422 unknown_product, and no event 1137ms
+ ✓ public/1-intake.test.ts > stage 1 · intake > P1.7 · a pricing outage → 503 with Retry-After, and no event; after recovery the same key → 202 1206ms
+ ✓ public/2-saga.test.ts > stage 2 · the saga, happy path > P2.1 · a web order → completed; each mock called once, in the order payment → inventory → shipping → notification 469ms
+ ✓ public/2-saga.test.ts > stage 2 · the saga, happy path > P2.2 · payment receives the exact amount as a decimal string, and Idempotency-Key authorize:<businessKey> 350ms
+ ✓ public/2-saga.test.ts > stage 2 · the saga, happy path > P2.3 · every mock call carries X-Correlation-Id = the correlationId intake returned
+ ✓ public/2-saga.test.ts > stage 2 · the saga, happy path > P2.4 · a b2b order → completed; payment is never called; inventory receives Idempotency-Key reserve:<businessKey>
+ ✓ public/2-saga.test.ts > stage 2 · the saga, happy path > P2.5 · GET /orders/:cid is valid against order-status.schema.json, with state completed and the right businessKey 417ms
+ ✓ public/3-compensation.test.ts > stage 3 · the compensation matrix > P3.1 · payment declined → failed with payment_declined, and nothing downstream is called 1003ms
+ ✓ public/3-compensation.test.ts > stage 3 · the compensation matrix > P3.2 · inventory unavailable → compensated, with exactly one refund
+ ✓ public/3-compensation.test.ts > stage 3 · the compensation matrix > P3.3 · a shipping timeout → compensated with timeout; the release comes before the refund 2755ms
+ ✓ public/3-compensation.test.ts > stage 3 · the compensation matrix > P3.4 · b2b with a shipping failure → compensated: a release, and no refund
+ ✓ public/4-channels.test.ts > stage 4 · the invalid channel, the notifier and the DLQ > P4.1 · `{ not json` on orders.exchange → orders.invalid with its original bytes; not in orders.dlq, and not retried 3199ms
+ ✓ public/4-channels.test.ts > stage 4 · the invalid channel, the notifier and the DLQ > P4.2 · a failed order → an order_not_completed notice 418ms
+ ✓ public/4-channels.test.ts > stage 4 · the invalid channel, the notifier and the DLQ > P4.3 · the same outcome event, published again by the test → still one notice 1582ms
+ ✓ public/4-channels.test.ts > stage 4 · the invalid channel, the notifier and the DLQ > P4.4 · the notification mock fails (with no effect) → a GET /dlq entry with originQueue notifications.queue, attempts 3 and lastError 2414ms
+ ✓ public/4-channels.test.ts > stage 4 · the invalid channel, the notifier and the DLQ > P4.5 · fixed, then POST /dlq/replay → exactly one notice, and the DLQ is empty 3572ms
+ ✓ public/5-trace-ops.test.ts > stage 5 · the trace and operations > P5.1 · GET /trace/:cid is valid against trace.schema.json 1126ms
+ ✓ public/5-trace-ops.test.ts > stage 5 · the trace and operations > P5.2 · a completed order's trace holds intake.receive … intake.publish, saga.consume, payment, inventory, shipping, notification, saga.outcome in startedAt order, all with its correlationId 387ms
+ ✓ public/5-trace-ops.test.ts > stage 5 · the trace and operations > P5.3 · /ops/metrics is valid, has all seven alert keys, and a dead-lettered message shows in dlqDepth and fires dlq_not_empty 308ms
+ ✓ public/5-trace-ops.test.ts > stage 5 · the trace and operations > the notifier stopped > P5.4 · the notifier stopped, then threshold + 1 order.failed events → notifier_consumer_missing and notifier_consumer_lag fire; both clear after it starts and drains 5066ms
+ ✓ public/6-documents.test.ts > stage 6 · the documents > P6.1 · the document files exist; ADR-007 to ADR-010 have their four headings; the ADR index links resolve; ai-usage.md and agent-readiness.md have their headings
+ ✓ public/6-documents.test.ts > stage 6 · the documents > P6.2 · the BPMN checks, the mermaid checks, the patterns.md rows and links, and a runbook section for each of the seven alert keys
+
+ Test Files  7 passed (7)
+      Tests  30 passed (30)
+   Start at  20:16:27
+   Duration  34.16s (transform 669ms, setup 0ms, collect 2.13s, tests 29.15s, environment 3ms, prepare 961ms)
+
+npm notice
+npm notice New major version of npm available! 10.8.2 -> 12.2.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+npm notice To update run: npm install -g npm@12.2.1
+npm notice
