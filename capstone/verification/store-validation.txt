@@ -1,0 +1,5 @@
+idempotency-store.json: valid (1 records)
+orders.json: valid (9 records)
+saga-store.json: valid (1 records)
+processed-ids.json: valid (1 records)
+trace-store.jsonl: valid (120 records)

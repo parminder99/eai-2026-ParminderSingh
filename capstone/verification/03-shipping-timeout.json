@@ -1,0 +1,500 @@
+{
+  "scenario": "03-shipping-timeout",
+  "orderId": "WEB-EVID-0b8f720029",
+  "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+  "order": {
+    "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+    "businessKey": "web:WEB-EVID-0b8f720029",
+    "orderId": "WEB-EVID-0b8f720029",
+    "source": "web",
+    "orderType": "standard",
+    "state": "compensated",
+    "updatedAt": "2026-11-04T20:04:46.125Z",
+    "code": "timeout"
+  },
+  "trace": {
+    "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+    "hops": [
+      {
+        "hopId": "8a4361cf-e22b-4c4c-aae5-3601762210cb",
+        "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+        "causationId": null,
+        "service": "intake",
+        "operation": "intake.receive",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:43.584Z",
+        "finishedAt": "2026-11-04T20:04:43.584Z",
+        "durationMs": 0
+      },
+      {
+        "hopId": "18ba21ab-cc46-48c6-994b-d00887be88b7",
+        "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+        "causationId": "8a4361cf-e22b-4c4c-aae5-3601762210cb",
+        "service": "intake",
+        "operation": "intake.translate",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:43.584Z",
+        "finishedAt": "2026-11-04T20:04:43.584Z",
+        "durationMs": 0
+      },
+      {
+        "hopId": "1acfb8c9-93df-4998-bb25-0c5094c2c6b5",
+        "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+        "causationId": "18ba21ab-cc46-48c6-994b-d00887be88b7",
+        "service": "intake",
+        "operation": "intake.enrich",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:43.584Z",
+        "finishedAt": "2026-11-04T20:04:43.587Z",
+        "durationMs": 3
+      },
+      {
+        "hopId": "2defb013-6c74-48a8-9056-c503aee6668d",
+        "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+        "causationId": "1acfb8c9-93df-4998-bb25-0c5094c2c6b5",
+        "service": "intake",
+        "operation": "intake.publish",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:43.588Z",
+        "finishedAt": "2026-11-04T20:04:43.588Z",
+        "durationMs": 0
+      },
+      {
+        "hopId": "3c6baa4b-bcc4-4a6d-8543-48d9fb158b2b",
+        "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+        "causationId": "2defb013-6c74-48a8-9056-c503aee6668d",
+        "service": "orchestrator",
+        "operation": "saga.consume",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:43.589Z",
+        "finishedAt": "2026-11-04T20:04:43.590Z",
+        "durationMs": 1
+      },
+      {
+        "hopId": "b4e3d7fa-f7f9-4013-8b3a-2973610a4ab8",
+        "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+        "causationId": "3c6baa4b-bcc4-4a6d-8543-48d9fb158b2b",
+        "service": "orchestrator",
+        "operation": "saga.dedupe",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:43.592Z",
+        "finishedAt": "2026-11-04T20:04:43.592Z",
+        "durationMs": 0
+      },
+      {
+        "hopId": "63e17abe-7a8c-403a-b560-bbca96c4be74",
+        "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+        "causationId": "b4e3d7fa-f7f9-4013-8b3a-2973610a4ab8",
+        "service": "orchestrator",
+        "operation": "saga.outcome",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:43.593Z",
+        "finishedAt": "2026-11-04T20:04:43.593Z",
+        "durationMs": 0
+      },
+      {
+        "hopId": "c1b4b3bb-c4d3-461a-96c3-aebe5cc924a1",
+        "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+        "causationId": "63e17abe-7a8c-403a-b560-bbca96c4be74",
+        "service": "orchestrator",
+        "operation": "payment",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:43.599Z",
+        "finishedAt": "2026-11-04T20:04:43.601Z",
+        "durationMs": 2
+      },
+      {
+        "hopId": "367aea1d-6fb0-4255-9fd9-b51d39cd5087",
+        "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+        "causationId": "c1b4b3bb-c4d3-461a-96c3-aebe5cc924a1",
+        "service": "orchestrator",
+        "operation": "inventory",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:43.605Z",
+        "finishedAt": "2026-11-04T20:04:43.607Z",
+        "durationMs": 2
+      },
+      {
+        "hopId": "94687d81-4c66-4303-8d3f-32aaa76bcec3",
+        "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+        "causationId": "367aea1d-6fb0-4255-9fd9-b51d39cd5087",
+        "service": "orchestrator",
+        "operation": "shipping",
+        "status": "timeout",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:43.611Z",
+        "finishedAt": "2026-11-04T20:04:46.108Z",
+        "durationMs": 2497,
+        "detail": {
+          "code": "timeout"
+        }
+      },
+      {
+        "hopId": "9b900b51-a48b-4360-8720-017fdedd36c4",
+        "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+        "causationId": "94687d81-4c66-4303-8d3f-32aaa76bcec3",
+        "service": "orchestrator",
+        "operation": "inventory_release",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:46.113Z",
+        "finishedAt": "2026-11-04T20:04:46.116Z",
+        "durationMs": 3
+      },
+      {
+        "hopId": "1a530f44-5f77-4c55-b2e9-ad559768f902",
+        "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+        "causationId": "9b900b51-a48b-4360-8720-017fdedd36c4",
+        "service": "orchestrator",
+        "operation": "payment_refund",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:46.120Z",
+        "finishedAt": "2026-11-04T20:04:46.122Z",
+        "durationMs": 2
+      },
+      {
+        "hopId": "22630066-1fb0-4c5e-a38a-b4c67b24a6c4",
+        "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+        "causationId": "1a530f44-5f77-4c55-b2e9-ad559768f902",
+        "service": "orchestrator",
+        "operation": "saga.outcome",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:46.126Z",
+        "finishedAt": "2026-11-04T20:04:46.126Z",
+        "durationMs": 0
+      },
+      {
+        "hopId": "48ccc082-3b2f-470c-bff1-4743c45f9162",
+        "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+        "causationId": "22630066-1fb0-4c5e-a38a-b4c67b24a6c4",
+        "service": "notifier",
+        "operation": "notify.consume",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:46.129Z",
+        "finishedAt": "2026-11-04T20:04:46.129Z",
+        "durationMs": 0
+      },
+      {
+        "hopId": "8db2ca6b-412e-4ea3-825d-8314cc7b0b65",
+        "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+        "causationId": "48ccc082-3b2f-470c-bff1-4743c45f9162",
+        "service": "notifier",
+        "operation": "notify.send",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:46.130Z",
+        "finishedAt": "2026-11-04T20:04:46.134Z",
+        "durationMs": 4
+      }
+    ]
+  },
+  "metrics": {
+    "generatedAt": "2026-11-04T20:04:46.716Z",
+    "queues": {
+      "saga.queue": {
+        "ready": 0,
+        "unacked": 1,
+        "consumers": 1
+      },
+      "notifications.queue": {
+        "ready": 0,
+        "unacked": 0,
+        "consumers": 1
+      },
+      "orders.dlq": {
+        "ready": 0,
+        "unacked": 0,
+        "consumers": 0
+      },
+      "orders.invalid": {
+        "ready": 0,
+        "unacked": 0,
+        "consumers": 0
+      },
+      "trace.store": {
+        "ready": 0,
+        "unacked": 0,
+        "consumers": 1
+      }
+    },
+    "dlqDepth": 0,
+    "invalidDepth": 0,
+    "stuckSagas": 0,
+    "alerts": [
+      {
+        "key": "dlq_not_empty",
+        "value": 0,
+        "threshold": null,
+        "firing": false
+      },
+      {
+        "key": "invalid_not_empty",
+        "value": 0,
+        "threshold": null,
+        "firing": false
+      },
+      {
+        "key": "saga_consumer_missing",
+        "value": 1,
+        "threshold": null,
+        "firing": false
+      },
+      {
+        "key": "notifier_consumer_missing",
+        "value": 1,
+        "threshold": null,
+        "firing": false
+      },
+      {
+        "key": "saga_consumer_lag",
+        "value": 0,
+        "threshold": 5,
+        "firing": false
+      },
+      {
+        "key": "notifier_consumer_lag",
+        "value": 0,
+        "threshold": 5,
+        "firing": false
+      },
+      {
+        "key": "stuck_sagas",
+        "value": 0,
+        "threshold": null,
+        "firing": false
+      }
+    ]
+  },
+  "providers": {
+    "payment": {
+      "logs": {
+        "service": "payment",
+        "logs": [
+          {
+            "seq": 1,
+            "at": "2026-11-04T20:04:43.601Z",
+            "receivedAt": "2026-11-04T20:04:43.600Z",
+            "respondedAt": "2026-11-04T20:04:43.601Z",
+            "action": "authorize",
+            "orderId": "WEB-EVID-0b8f720029",
+            "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+            "causationId": "c1b4b3bb-c4d3-461a-96c3-aebe5cc924a1",
+            "idempotencyKey": "authorize:web:WEB-EVID-0b8f720029",
+            "outcome": "success",
+            "status": 200,
+            "effect": true,
+            "delayMs": 0,
+            "amount": "90.30"
+          },
+          {
+            "seq": 2,
+            "at": "2026-11-04T20:04:46.121Z",
+            "receivedAt": "2026-11-04T20:04:46.121Z",
+            "respondedAt": "2026-11-04T20:04:46.121Z",
+            "action": "refund",
+            "orderId": "WEB-EVID-0b8f720029",
+            "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+            "causationId": "1a530f44-5f77-4c55-b2e9-ad559768f902",
+            "idempotencyKey": "refund:web:WEB-EVID-0b8f720029",
+            "outcome": "success",
+            "status": 200,
+            "effect": true,
+            "delayMs": 0,
+            "amount": null
+          }
+        ]
+      },
+      "effects": {
+        "service": "payment",
+        "effects": [
+          {
+            "seq": 1,
+            "at": "2026-11-04T20:04:43.601Z",
+            "type": "charge",
+            "action": "authorize",
+            "orderId": "WEB-EVID-0b8f720029",
+            "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+            "causationId": "c1b4b3bb-c4d3-461a-96c3-aebe5cc924a1",
+            "idempotencyKey": "authorize:web:WEB-EVID-0b8f720029",
+            "amount": "90.30"
+          },
+          {
+            "seq": 2,
+            "at": "2026-11-04T20:04:46.121Z",
+            "type": "refund",
+            "action": "refund",
+            "orderId": "WEB-EVID-0b8f720029",
+            "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+            "causationId": "1a530f44-5f77-4c55-b2e9-ad559768f902",
+            "idempotencyKey": "refund:web:WEB-EVID-0b8f720029",
+            "amount": null
+          }
+        ]
+      }
+    },
+    "inventory": {
+      "logs": {
+        "service": "inventory",
+        "logs": [
+          {
+            "seq": 1,
+            "at": "2026-11-04T20:04:43.606Z",
+            "receivedAt": "2026-11-04T20:04:43.606Z",
+            "respondedAt": "2026-11-04T20:04:43.606Z",
+            "action": "reserve",
+            "orderId": "WEB-EVID-0b8f720029",
+            "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+            "causationId": "367aea1d-6fb0-4255-9fd9-b51d39cd5087",
+            "idempotencyKey": "reserve:web:WEB-EVID-0b8f720029",
+            "outcome": "success",
+            "status": 200,
+            "effect": true,
+            "delayMs": 0,
+            "items": [
+              {
+                "productId": "PROD-001",
+                "productName": "Wireless Mouse",
+                "quantity": 2,
+                "unitPrice": "22.50",
+                "currency": "EUR",
+                "taxRate": 0.21
+              },
+              {
+                "productId": "PROD-002",
+                "productName": "USB-C Hub",
+                "quantity": 1,
+                "unitPrice": "45.30",
+                "currency": "EUR",
+                "taxRate": 0.21
+              }
+            ]
+          },
+          {
+            "seq": 2,
+            "at": "2026-11-04T20:04:46.115Z",
+            "receivedAt": "2026-11-04T20:04:46.115Z",
+            "respondedAt": "2026-11-04T20:04:46.115Z",
+            "action": "release",
+            "orderId": "WEB-EVID-0b8f720029",
+            "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+            "causationId": "9b900b51-a48b-4360-8720-017fdedd36c4",
+            "idempotencyKey": "release:web:WEB-EVID-0b8f720029",
+            "outcome": "success",
+            "status": 200,
+            "effect": true,
+            "delayMs": 0
+          }
+        ]
+      },
+      "effects": {
+        "service": "inventory",
+        "effects": [
+          {
+            "seq": 1,
+            "at": "2026-11-04T20:04:43.606Z",
+            "type": "reservation",
+            "action": "reserve",
+            "orderId": "WEB-EVID-0b8f720029",
+            "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+            "causationId": "367aea1d-6fb0-4255-9fd9-b51d39cd5087",
+            "idempotencyKey": "reserve:web:WEB-EVID-0b8f720029",
+            "items": [
+              {
+                "productId": "PROD-001",
+                "productName": "Wireless Mouse",
+                "quantity": 2,
+                "unitPrice": "22.50",
+                "currency": "EUR",
+                "taxRate": 0.21
+              },
+              {
+                "productId": "PROD-002",
+                "productName": "USB-C Hub",
+                "quantity": 1,
+                "unitPrice": "45.30",
+                "currency": "EUR",
+                "taxRate": 0.21
+              }
+            ]
+          },
+          {
+            "seq": 2,
+            "at": "2026-11-04T20:04:46.115Z",
+            "type": "release",
+            "action": "release",
+            "orderId": "WEB-EVID-0b8f720029",
+            "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+            "causationId": "9b900b51-a48b-4360-8720-017fdedd36c4",
+            "idempotencyKey": "release:web:WEB-EVID-0b8f720029"
+          }
+        ]
+      }
+    },
+    "shipping": {
+      "logs": {
+        "service": "shipping",
+        "logs": []
+      },
+      "effects": {
+        "service": "shipping",
+        "effects": []
+      }
+    },
+    "notification": {
+      "logs": {
+        "service": "notification",
+        "logs": [
+          {
+            "seq": 1,
+            "at": "2026-11-04T20:04:46.133Z",
+            "receivedAt": "2026-11-04T20:04:46.132Z",
+            "respondedAt": "2026-11-04T20:04:46.133Z",
+            "action": "send",
+            "orderId": "WEB-EVID-0b8f720029",
+            "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+            "causationId": "8db2ca6b-412e-4ea3-825d-8314cc7b0b65",
+            "idempotencyKey": null,
+            "outcome": "success",
+            "status": 200,
+            "effect": true,
+            "delayMs": 0,
+            "recipient": "anna.berzina@example.com",
+            "kind": "order_not_completed",
+            "reason": "timeout"
+          }
+        ]
+      },
+      "effects": {
+        "service": "notification",
+        "effects": [
+          {
+            "seq": 1,
+            "at": "2026-11-04T20:04:46.133Z",
+            "type": "notice",
+            "action": "send",
+            "orderId": "WEB-EVID-0b8f720029",
+            "correlationId": "1603d902-170a-40e1-abd7-e99a63a415bb",
+            "causationId": "8db2ca6b-412e-4ea3-825d-8314cc7b0b65",
+            "idempotencyKey": null,
+            "recipient": "anna.berzina@example.com",
+            "kind": "order_not_completed",
+            "reason": "timeout"
+          }
+        ]
+      }
+    }
+  },
+  "extra": null
+}

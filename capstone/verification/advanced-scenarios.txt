@@ -1,0 +1,10 @@
+T2-web completed
+T2-b2b completed
+T3-inventory compensated
+T3-timeout compensated
+T3-refund compensation_failed
+T5-payment-retry completed
+T4-worker-restart completed
+T6-new-key-duplicate duplicate
+T6-same-correlation-redelivery completed
+ADVANCED SCENARIOS PASSED

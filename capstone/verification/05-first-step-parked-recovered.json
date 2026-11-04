@@ -1,0 +1,714 @@
+{
+  "scenario": "05-first-step-parked-recovered",
+  "orderId": "WEB-EVID-9b3f521608",
+  "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+  "order": {
+    "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+    "businessKey": "web:WEB-EVID-9b3f521608",
+    "orderId": "WEB-EVID-9b3f521608",
+    "source": "web",
+    "orderType": "standard",
+    "state": "completed",
+    "updatedAt": "2026-11-04T20:04:52.196Z",
+    "code": "service_unavailable"
+  },
+  "trace": {
+    "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+    "hops": [
+      {
+        "hopId": "3139f06c-cc97-479f-91b3-6ab6c7bc7931",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": null,
+        "service": "intake",
+        "operation": "intake.receive",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:49.410Z",
+        "finishedAt": "2026-11-04T20:04:49.410Z",
+        "durationMs": 0
+      },
+      {
+        "hopId": "245053a4-3ef9-458d-b5d3-d5c6a67087cf",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "3139f06c-cc97-479f-91b3-6ab6c7bc7931",
+        "service": "intake",
+        "operation": "intake.translate",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:49.410Z",
+        "finishedAt": "2026-11-04T20:04:49.410Z",
+        "durationMs": 0
+      },
+      {
+        "hopId": "972bd887-ae5f-46ce-8ff3-af8e8524d497",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "245053a4-3ef9-458d-b5d3-d5c6a67087cf",
+        "service": "intake",
+        "operation": "intake.enrich",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:49.410Z",
+        "finishedAt": "2026-11-04T20:04:49.413Z",
+        "durationMs": 3
+      },
+      {
+        "hopId": "37e83fb5-135e-497f-8b58-80cb3d6da52d",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "972bd887-ae5f-46ce-8ff3-af8e8524d497",
+        "service": "intake",
+        "operation": "intake.publish",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:49.414Z",
+        "finishedAt": "2026-11-04T20:04:49.414Z",
+        "durationMs": 0
+      },
+      {
+        "hopId": "e01e397e-3d26-465c-939e-f3f56638448a",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "37e83fb5-135e-497f-8b58-80cb3d6da52d",
+        "service": "orchestrator",
+        "operation": "saga.consume",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:49.415Z",
+        "finishedAt": "2026-11-04T20:04:49.415Z",
+        "durationMs": 0
+      },
+      {
+        "hopId": "856422f8-bc71-40ce-84f6-aa6c80946cea",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "e01e397e-3d26-465c-939e-f3f56638448a",
+        "service": "orchestrator",
+        "operation": "saga.dedupe",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:49.417Z",
+        "finishedAt": "2026-11-04T20:04:49.417Z",
+        "durationMs": 0
+      },
+      {
+        "hopId": "c176f1ce-3583-4378-97b1-838bbc4beace",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "856422f8-bc71-40ce-84f6-aa6c80946cea",
+        "service": "orchestrator",
+        "operation": "saga.outcome",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:49.419Z",
+        "finishedAt": "2026-11-04T20:04:49.419Z",
+        "durationMs": 0
+      },
+      {
+        "hopId": "a55c2e7f-bb30-4609-86f3-163a6b6e1472",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "c176f1ce-3583-4378-97b1-838bbc4beace",
+        "service": "orchestrator",
+        "operation": "payment",
+        "status": "failed",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:49.424Z",
+        "finishedAt": "2026-11-04T20:04:49.426Z",
+        "durationMs": 2,
+        "detail": {
+          "code": "service_unavailable"
+        }
+      },
+      {
+        "hopId": "c6520e18-a65a-4932-9ea3-0276db7f811a",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "e01e397e-3d26-465c-939e-f3f56638448a",
+        "service": "orchestrator",
+        "operation": "saga.retry",
+        "status": "retried",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:49.430Z",
+        "finishedAt": "2026-11-04T20:04:49.430Z",
+        "durationMs": 0,
+        "detail": {
+          "code": "service_unavailable"
+        }
+      },
+      {
+        "hopId": "0e9e909e-efa6-44a6-8400-5f05bedb9157",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "37e83fb5-135e-497f-8b58-80cb3d6da52d",
+        "service": "orchestrator",
+        "operation": "saga.consume",
+        "status": "success",
+        "attempt": 2,
+        "startedAt": "2026-11-04T20:04:50.435Z",
+        "finishedAt": "2026-11-04T20:04:50.435Z",
+        "durationMs": 0
+      },
+      {
+        "hopId": "922c933b-c2ad-4ec4-b49c-3c35f4f3f101",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "0e9e909e-efa6-44a6-8400-5f05bedb9157",
+        "service": "orchestrator",
+        "operation": "saga.dedupe",
+        "status": "success",
+        "attempt": 2,
+        "startedAt": "2026-11-04T20:04:50.435Z",
+        "finishedAt": "2026-11-04T20:04:50.435Z",
+        "durationMs": 0
+      },
+      {
+        "hopId": "b19412b8-f3dd-4145-bc4b-df9657df24e2",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "922c933b-c2ad-4ec4-b49c-3c35f4f3f101",
+        "service": "orchestrator",
+        "operation": "saga.outcome",
+        "status": "success",
+        "attempt": 2,
+        "startedAt": "2026-11-04T20:04:50.438Z",
+        "finishedAt": "2026-11-04T20:04:50.438Z",
+        "durationMs": 0
+      },
+      {
+        "hopId": "7fc5bad2-0c01-469e-9574-210bb6e8c9ca",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "b19412b8-f3dd-4145-bc4b-df9657df24e2",
+        "service": "orchestrator",
+        "operation": "payment",
+        "status": "failed",
+        "attempt": 2,
+        "startedAt": "2026-11-04T20:04:50.444Z",
+        "finishedAt": "2026-11-04T20:04:50.448Z",
+        "durationMs": 4,
+        "detail": {
+          "code": "service_unavailable"
+        }
+      },
+      {
+        "hopId": "6da722bc-4bee-4abb-8291-dd5574c813a9",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "0e9e909e-efa6-44a6-8400-5f05bedb9157",
+        "service": "orchestrator",
+        "operation": "saga.retry",
+        "status": "retried",
+        "attempt": 2,
+        "startedAt": "2026-11-04T20:04:50.454Z",
+        "finishedAt": "2026-11-04T20:04:50.454Z",
+        "durationMs": 0,
+        "detail": {
+          "code": "service_unavailable"
+        }
+      },
+      {
+        "hopId": "4732e4a3-e5a4-4139-bfcb-65b6209d50f9",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "37e83fb5-135e-497f-8b58-80cb3d6da52d",
+        "service": "orchestrator",
+        "operation": "saga.consume",
+        "status": "success",
+        "attempt": 3,
+        "startedAt": "2026-11-04T20:04:51.461Z",
+        "finishedAt": "2026-11-04T20:04:51.461Z",
+        "durationMs": 0
+      },
+      {
+        "hopId": "ccc45cb9-355a-495e-8b9e-8d76383dfd46",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "4732e4a3-e5a4-4139-bfcb-65b6209d50f9",
+        "service": "orchestrator",
+        "operation": "saga.dedupe",
+        "status": "success",
+        "attempt": 3,
+        "startedAt": "2026-11-04T20:04:51.461Z",
+        "finishedAt": "2026-11-04T20:04:51.461Z",
+        "durationMs": 0
+      },
+      {
+        "hopId": "65682777-b711-44b1-9642-7c964180ff3e",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "ccc45cb9-355a-495e-8b9e-8d76383dfd46",
+        "service": "orchestrator",
+        "operation": "saga.outcome",
+        "status": "success",
+        "attempt": 3,
+        "startedAt": "2026-11-04T20:04:51.465Z",
+        "finishedAt": "2026-11-04T20:04:51.466Z",
+        "durationMs": 1
+      },
+      {
+        "hopId": "cdba8bd1-5ffb-4b22-8c89-794366b4c0f6",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "65682777-b711-44b1-9642-7c964180ff3e",
+        "service": "orchestrator",
+        "operation": "payment",
+        "status": "failed",
+        "attempt": 3,
+        "startedAt": "2026-11-04T20:04:51.472Z",
+        "finishedAt": "2026-11-04T20:04:51.476Z",
+        "durationMs": 4,
+        "detail": {
+          "code": "service_unavailable"
+        }
+      },
+      {
+        "hopId": "6bd9f8ef-af07-4317-bdc9-49195406e938",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "cdba8bd1-5ffb-4b22-8c89-794366b4c0f6",
+        "service": "orchestrator",
+        "operation": "saga.dead_letter",
+        "status": "dead_lettered",
+        "attempt": 3,
+        "startedAt": "2026-11-04T20:04:51.483Z",
+        "finishedAt": "2026-11-04T20:04:51.483Z",
+        "durationMs": 0,
+        "detail": {
+          "code": "service_unavailable"
+        }
+      },
+      {
+        "hopId": "357a581e-26d6-4a04-bb37-e376e5549d6e",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "6bd9f8ef-af07-4317-bdc9-49195406e938",
+        "service": "orchestrator",
+        "operation": "saga.outcome",
+        "status": "success",
+        "attempt": 3,
+        "startedAt": "2026-11-04T20:04:51.493Z",
+        "finishedAt": "2026-11-04T20:04:51.493Z",
+        "durationMs": 0
+      },
+      {
+        "hopId": "4425ceab-c3e2-41f5-88be-6504de171c3a",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "6bd9f8ef-af07-4317-bdc9-49195406e938",
+        "service": "intake",
+        "operation": "dlq.replay",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:52.132Z",
+        "finishedAt": "2026-11-04T20:04:52.132Z",
+        "durationMs": 0
+      },
+      {
+        "hopId": "d17e1d42-3358-4a39-b73d-147c582c38d2",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "4425ceab-c3e2-41f5-88be-6504de171c3a",
+        "service": "orchestrator",
+        "operation": "saga.consume",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:52.137Z",
+        "finishedAt": "2026-11-04T20:04:52.137Z",
+        "durationMs": 0
+      },
+      {
+        "hopId": "a09f4b30-2cbf-4c12-818c-353c04bb98b9",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "d17e1d42-3358-4a39-b73d-147c582c38d2",
+        "service": "orchestrator",
+        "operation": "saga.dedupe",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:52.137Z",
+        "finishedAt": "2026-11-04T20:04:52.137Z",
+        "durationMs": 0
+      },
+      {
+        "hopId": "5b65601b-a6ca-4123-bbaf-c6894c010f01",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "a09f4b30-2cbf-4c12-818c-353c04bb98b9",
+        "service": "orchestrator",
+        "operation": "saga.outcome",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:52.140Z",
+        "finishedAt": "2026-11-04T20:04:52.140Z",
+        "durationMs": 0
+      },
+      {
+        "hopId": "e7acc04e-edad-46f0-a062-3d776d5643da",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "5b65601b-a6ca-4123-bbaf-c6894c010f01",
+        "service": "orchestrator",
+        "operation": "payment",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:52.151Z",
+        "finishedAt": "2026-11-04T20:04:52.154Z",
+        "durationMs": 3
+      },
+      {
+        "hopId": "5c4bba2f-1d0a-4a8c-9b2c-57155243fd58",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "e7acc04e-edad-46f0-a062-3d776d5643da",
+        "service": "orchestrator",
+        "operation": "inventory",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:52.161Z",
+        "finishedAt": "2026-11-04T20:04:52.167Z",
+        "durationMs": 6
+      },
+      {
+        "hopId": "e1bb4fa8-7cad-4320-83b9-347bea60383c",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "5c4bba2f-1d0a-4a8c-9b2c-57155243fd58",
+        "service": "orchestrator",
+        "operation": "shipping",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:52.172Z",
+        "finishedAt": "2026-11-04T20:04:52.179Z",
+        "durationMs": 7
+      },
+      {
+        "hopId": "17942fb4-22eb-487c-a464-d5fc1efe7fa5",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "e1bb4fa8-7cad-4320-83b9-347bea60383c",
+        "service": "orchestrator",
+        "operation": "notification",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:52.185Z",
+        "finishedAt": "2026-11-04T20:04:52.193Z",
+        "durationMs": 8
+      },
+      {
+        "hopId": "7bc749cb-2adc-47ec-ac33-cafcd76295fe",
+        "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+        "causationId": "17942fb4-22eb-487c-a464-d5fc1efe7fa5",
+        "service": "orchestrator",
+        "operation": "saga.outcome",
+        "status": "success",
+        "attempt": 1,
+        "startedAt": "2026-11-04T20:04:52.200Z",
+        "finishedAt": "2026-11-04T20:04:52.200Z",
+        "durationMs": 0
+      }
+    ]
+  },
+  "metrics": {
+    "generatedAt": "2026-11-04T20:04:52.918Z",
+    "queues": {
+      "saga.queue": {
+        "ready": 0,
+        "unacked": 1,
+        "consumers": 1
+      },
+      "notifications.queue": {
+        "ready": 0,
+        "unacked": 0,
+        "consumers": 1
+      },
+      "orders.dlq": {
+        "ready": 0,
+        "unacked": 0,
+        "consumers": 0
+      },
+      "orders.invalid": {
+        "ready": 0,
+        "unacked": 0,
+        "consumers": 0
+      },
+      "trace.store": {
+        "ready": 0,
+        "unacked": 0,
+        "consumers": 1
+      }
+    },
+    "dlqDepth": 0,
+    "invalidDepth": 0,
+    "stuckSagas": 0,
+    "alerts": [
+      {
+        "key": "dlq_not_empty",
+        "value": 0,
+        "threshold": null,
+        "firing": false
+      },
+      {
+        "key": "invalid_not_empty",
+        "value": 0,
+        "threshold": null,
+        "firing": false
+      },
+      {
+        "key": "saga_consumer_missing",
+        "value": 1,
+        "threshold": null,
+        "firing": false
+      },
+      {
+        "key": "notifier_consumer_missing",
+        "value": 1,
+        "threshold": null,
+        "firing": false
+      },
+      {
+        "key": "saga_consumer_lag",
+        "value": 0,
+        "threshold": 5,
+        "firing": false
+      },
+      {
+        "key": "notifier_consumer_lag",
+        "value": 0,
+        "threshold": 5,
+        "firing": false
+      },
+      {
+        "key": "stuck_sagas",
+        "value": 0,
+        "threshold": null,
+        "firing": false
+      }
+    ]
+  },
+  "providers": {
+    "payment": {
+      "logs": {
+        "service": "payment",
+        "logs": [
+          {
+            "seq": 1,
+            "at": "2026-11-04T20:04:49.425Z",
+            "receivedAt": "2026-11-04T20:04:49.425Z",
+            "respondedAt": "2026-11-04T20:04:49.425Z",
+            "action": "authorize",
+            "orderId": "WEB-EVID-9b3f521608",
+            "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+            "causationId": "a55c2e7f-bb30-4609-86f3-163a6b6e1472",
+            "idempotencyKey": "authorize:web:WEB-EVID-9b3f521608",
+            "outcome": "failed",
+            "status": 503,
+            "effect": false,
+            "delayMs": 0,
+            "amount": "90.30"
+          },
+          {
+            "seq": 2,
+            "at": "2026-11-04T20:04:50.446Z",
+            "receivedAt": "2026-11-04T20:04:50.446Z",
+            "respondedAt": "2026-11-04T20:04:50.446Z",
+            "action": "authorize",
+            "orderId": "WEB-EVID-9b3f521608",
+            "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+            "causationId": "7fc5bad2-0c01-469e-9574-210bb6e8c9ca",
+            "idempotencyKey": "authorize:web:WEB-EVID-9b3f521608",
+            "outcome": "failed",
+            "status": 503,
+            "effect": false,
+            "delayMs": 0,
+            "amount": "90.30"
+          },
+          {
+            "seq": 3,
+            "at": "2026-11-04T20:04:51.475Z",
+            "receivedAt": "2026-11-04T20:04:51.474Z",
+            "respondedAt": "2026-11-04T20:04:51.475Z",
+            "action": "authorize",
+            "orderId": "WEB-EVID-9b3f521608",
+            "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+            "causationId": "cdba8bd1-5ffb-4b22-8c89-794366b4c0f6",
+            "idempotencyKey": "authorize:web:WEB-EVID-9b3f521608",
+            "outcome": "failed",
+            "status": 503,
+            "effect": false,
+            "delayMs": 0,
+            "amount": "90.30"
+          },
+          {
+            "seq": 4,
+            "at": "2026-11-04T20:04:52.153Z",
+            "receivedAt": "2026-11-04T20:04:52.153Z",
+            "respondedAt": "2026-11-04T20:04:52.153Z",
+            "action": "authorize",
+            "orderId": "WEB-EVID-9b3f521608",
+            "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+            "causationId": "e7acc04e-edad-46f0-a062-3d776d5643da",
+            "idempotencyKey": "authorize:web:WEB-EVID-9b3f521608",
+            "outcome": "success",
+            "status": 200,
+            "effect": true,
+            "delayMs": 0,
+            "amount": "90.30"
+          }
+        ]
+      },
+      "effects": {
+        "service": "payment",
+        "effects": [
+          {
+            "seq": 1,
+            "at": "2026-11-04T20:04:52.153Z",
+            "type": "charge",
+            "action": "authorize",
+            "orderId": "WEB-EVID-9b3f521608",
+            "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+            "causationId": "e7acc04e-edad-46f0-a062-3d776d5643da",
+            "idempotencyKey": "authorize:web:WEB-EVID-9b3f521608",
+            "amount": "90.30"
+          }
+        ]
+      }
+    },
+    "inventory": {
+      "logs": {
+        "service": "inventory",
+        "logs": [
+          {
+            "seq": 1,
+            "at": "2026-11-04T20:04:52.165Z",
+            "receivedAt": "2026-11-04T20:04:52.165Z",
+            "respondedAt": "2026-11-04T20:04:52.165Z",
+            "action": "reserve",
+            "orderId": "WEB-EVID-9b3f521608",
+            "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+            "causationId": "5c4bba2f-1d0a-4a8c-9b2c-57155243fd58",
+            "idempotencyKey": "reserve:web:WEB-EVID-9b3f521608",
+            "outcome": "success",
+            "status": 200,
+            "effect": true,
+            "delayMs": 0,
+            "items": [
+              {
+                "productId": "PROD-001",
+                "productName": "Wireless Mouse",
+                "quantity": 2,
+                "unitPrice": "22.50",
+                "currency": "EUR",
+                "taxRate": 0.21
+              },
+              {
+                "productId": "PROD-002",
+                "productName": "USB-C Hub",
+                "quantity": 1,
+                "unitPrice": "45.30",
+                "currency": "EUR",
+                "taxRate": 0.21
+              }
+            ]
+          }
+        ]
+      },
+      "effects": {
+        "service": "inventory",
+        "effects": [
+          {
+            "seq": 1,
+            "at": "2026-11-04T20:04:52.165Z",
+            "type": "reservation",
+            "action": "reserve",
+            "orderId": "WEB-EVID-9b3f521608",
+            "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+            "causationId": "5c4bba2f-1d0a-4a8c-9b2c-57155243fd58",
+            "idempotencyKey": "reserve:web:WEB-EVID-9b3f521608",
+            "items": [
+              {
+                "productId": "PROD-001",
+                "productName": "Wireless Mouse",
+                "quantity": 2,
+                "unitPrice": "22.50",
+                "currency": "EUR",
+                "taxRate": 0.21
+              },
+              {
+                "productId": "PROD-002",
+                "productName": "USB-C Hub",
+                "quantity": 1,
+                "unitPrice": "45.30",
+                "currency": "EUR",
+                "taxRate": 0.21
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "shipping": {
+      "logs": {
+        "service": "shipping",
+        "logs": [
+          {
+            "seq": 1,
+            "at": "2026-11-04T20:04:52.177Z",
+            "receivedAt": "2026-11-04T20:04:52.177Z",
+            "respondedAt": "2026-11-04T20:04:52.177Z",
+            "action": "create",
+            "orderId": "WEB-EVID-9b3f521608",
+            "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+            "causationId": "e1bb4fa8-7cad-4320-83b9-347bea60383c",
+            "idempotencyKey": null,
+            "outcome": "success",
+            "status": 200,
+            "effect": true,
+            "delayMs": 0
+          }
+        ]
+      },
+      "effects": {
+        "service": "shipping",
+        "effects": [
+          {
+            "seq": 1,
+            "at": "2026-11-04T20:04:52.177Z",
+            "type": "shipment",
+            "action": "create",
+            "orderId": "WEB-EVID-9b3f521608",
+            "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+            "causationId": "e1bb4fa8-7cad-4320-83b9-347bea60383c",
+            "idempotencyKey": null
+          }
+        ]
+      }
+    },
+    "notification": {
+      "logs": {
+        "service": "notification",
+        "logs": [
+          {
+            "seq": 1,
+            "at": "2026-11-04T20:04:52.191Z",
+            "receivedAt": "2026-11-04T20:04:52.189Z",
+            "respondedAt": "2026-11-04T20:04:52.191Z",
+            "action": "send",
+            "orderId": "WEB-EVID-9b3f521608",
+            "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+            "causationId": "17942fb4-22eb-487c-a464-d5fc1efe7fa5",
+            "idempotencyKey": null,
+            "outcome": "success",
+            "status": 200,
+            "effect": true,
+            "delayMs": 0,
+            "recipient": "anna.berzina@example.com",
+            "kind": "order_confirmed",
+            "reason": null
+          }
+        ]
+      },
+      "effects": {
+        "service": "notification",
+        "effects": [
+          {
+            "seq": 1,
+            "at": "2026-11-04T20:04:52.191Z",
+            "type": "notice",
+            "action": "send",
+            "orderId": "WEB-EVID-9b3f521608",
+            "correlationId": "20075214-fa95-4077-b175-f08e9b3737c0",
+            "causationId": "17942fb4-22eb-487c-a464-d5fc1efe7fa5",
+            "idempotencyKey": null,
+            "recipient": "anna.berzina@example.com",
+            "kind": "order_confirmed",
+            "reason": null
+          }
+        ]
+      }
+    }
+  },
+  "extra": {
+    "replay": [
+      200,
+      {
+        "replayed": 1,
+        "remaining": 0
+      }
+    ]
+  }
+}
